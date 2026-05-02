@@ -1,0 +1,151 @@
+CREATE TABLE Admin (
+    id VARCHAR(191) PRIMARY KEY,
+    username VARCHAR(191) UNIQUE NOT NULL
+);
+
+CREATE TABLE Grade (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    level INT UNIQUE NOT NULL
+);
+
+CREATE TABLE Subject (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) UNIQUE NOT NULL
+);
+
+CREATE TABLE Parent (
+    id VARCHAR(191) PRIMARY KEY,
+    username VARCHAR(191) UNIQUE NOT NULL,
+    name VARCHAR(191) NOT NULL,
+    surname VARCHAR(191) NOT NULL,
+    email VARCHAR(191) UNIQUE,
+    phone VARCHAR(191) UNIQUE NOT NULL,
+    address TEXT NOT NULL,
+    createdAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3)
+);
+
+CREATE TABLE Teacher (
+    id VARCHAR(191) PRIMARY KEY,
+    username VARCHAR(191) UNIQUE NOT NULL,
+    name VARCHAR(191) NOT NULL,
+    surname VARCHAR(191) NOT NULL,
+    email VARCHAR(191) UNIQUE,
+    phone VARCHAR(191) UNIQUE,
+    address TEXT NOT NULL,
+    img VARCHAR(191),
+    bloodType VARCHAR(191) NOT NULL,
+    gender ENUM('MALE', 'FEMALE') NOT NULL,
+    createdAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+    birthday DATETIME(3) NOT NULL
+);
+
+CREATE TABLE Class (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) UNIQUE NOT NULL,
+    capacity INT NOT NULL,
+    supervisorId VARCHAR(191),
+    gradeId INT NOT NULL,
+    CONSTRAINT fk_class_teacher FOREIGN KEY (supervisorId) REFERENCES Teacher(id) ON DELETE SET NULL,
+    CONSTRAINT fk_class_grade FOREIGN KEY (gradeId) REFERENCES Grade(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE Student (
+    id VARCHAR(191) PRIMARY KEY,
+    username VARCHAR(191) UNIQUE NOT NULL,
+    name VARCHAR(191) NOT NULL,
+    surname VARCHAR(191) NOT NULL,
+    email VARCHAR(191) UNIQUE,
+    phone VARCHAR(191) UNIQUE,
+    address TEXT NOT NULL,
+    img VARCHAR(191),
+    bloodType VARCHAR(191) NOT NULL,
+    gender ENUM('MALE', 'FEMALE') NOT NULL,
+    createdAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+    parentId VARCHAR(191) NOT NULL,
+    classId INT NOT NULL,
+    gradeId INT NOT NULL,
+    birthday DATETIME(3) NOT NULL,
+    CONSTRAINT fk_student_parent FOREIGN KEY (parentId) REFERENCES Parent(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_student_class FOREIGN KEY (classId) REFERENCES Class(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_student_grade FOREIGN KEY (gradeId) REFERENCES Grade(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE Lesson (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    day ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY') NOT NULL,
+    startTime DATETIME(3) NOT NULL,
+    endTime DATETIME(3) NOT NULL,
+    subjectId INT NOT NULL,
+    classId INT NOT NULL,
+    teacherId VARCHAR(191) NOT NULL,
+    CONSTRAINT fk_lesson_subject FOREIGN KEY (subjectId) REFERENCES Subject(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_lesson_class FOREIGN KEY (classId) REFERENCES Class(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_lesson_teacher FOREIGN KEY (teacherId) REFERENCES Teacher(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE Exam (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(191) NOT NULL,
+    startTime DATETIME(3) NOT NULL,
+    endTime DATETIME(3) NOT NULL,
+    lessonId INT NOT NULL,
+    CONSTRAINT fk_exam_lesson FOREIGN KEY (lessonId) REFERENCES Lesson(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE Assignment (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(191) NOT NULL,
+    startDate DATETIME(3) NOT NULL,
+    dueDate DATETIME(3) NOT NULL,
+    lessonId INT NOT NULL,
+    CONSTRAINT fk_assignment_lesson FOREIGN KEY (lessonId) REFERENCES Lesson(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE Result (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    score INT NOT NULL,
+    examId INT,
+    assignmentId INT,
+    studentId VARCHAR(191) NOT NULL,
+    CONSTRAINT fk_result_exam FOREIGN KEY (examId) REFERENCES Exam(id) ON DELETE SET NULL,
+    CONSTRAINT fk_result_assignment FOREIGN KEY (assignmentId) REFERENCES Assignment(id) ON DELETE SET NULL,
+    CONSTRAINT fk_result_student FOREIGN KEY (studentId) REFERENCES Student(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE Attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATETIME(3) NOT NULL,
+    present BOOLEAN NOT NULL,
+    studentId VARCHAR(191) NOT NULL,
+    lessonId INT NOT NULL,
+    CONSTRAINT fk_attendance_student FOREIGN KEY (studentId) REFERENCES Student(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_attendance_lesson FOREIGN KEY (lessonId) REFERENCES Lesson(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE Event (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(191) NOT NULL,
+    description TEXT NOT NULL,
+    startTime DATETIME(3) NOT NULL,
+    endTime DATETIME(3) NOT NULL,
+    classId INT,
+    CONSTRAINT fk_event_class FOREIGN KEY (classId) REFERENCES Class(id) ON DELETE SET NULL
+);
+
+CREATE TABLE Announcement (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(191) NOT NULL,
+    description TEXT NOT NULL,
+    date DATETIME(3) NOT NULL,
+    classId INT,
+    CONSTRAINT fk_announcement_class FOREIGN KEY (classId) REFERENCES Class(id) ON DELETE SET NULL
+);
+
+CREATE TABLE _SubjectToTeacher (
+    A INT NOT NULL,
+    B VARCHAR(191) NOT NULL,
+    UNIQUE KEY (A, B),
+    CONSTRAINT fk_subject_teacher_A FOREIGN KEY (A) REFERENCES Subject(id) ON DELETE CASCADE,
+    CONSTRAINT fk_subject_teacher_B FOREIGN KEY (B) REFERENCES Teacher(id) ON DELETE CASCADE
+);
