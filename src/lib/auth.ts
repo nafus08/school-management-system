@@ -12,7 +12,11 @@ export interface User {
 }
 
 export async function createSession(user: User) {
-  const token = await new SignJWT(user)
+  const token = await new SignJWT({
+    id: user.id,
+    username: user.username,
+    role: user.role,
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
