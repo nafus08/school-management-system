@@ -4,7 +4,7 @@ A full-stack school administration dashboard for managing school data across adm
 
 ## Live demo
 
-No live deployment is currently configured for this repository. See the [source code](https://github.com/nafus08/school-management-system).
+[Open the Vercel deployment](https://school-management-system-ht4xxhwfd.vercel.app/). The deployment is active, but Vercel access protection currently requires authorization to view it.
 
 ## Tech stack
 
