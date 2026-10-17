@@ -23,7 +23,11 @@ export default function SignIn() {
       });
 
       if (!response.ok) {
-        setError("Invalid credentials");
+        setError(
+          response.status === 401
+            ? "Invalid credentials"
+            : "Login service is unavailable. Please try again later.",
+        );
         setLoading(false);
         return;
       }

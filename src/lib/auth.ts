@@ -1,9 +1,12 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "your-secret-key-change-in-production",
-);
+function getSecret() {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("Missing JWT_SECRET environment variable");
+  }
+  return new TextEncoder().encode(process.env.JWT_SECRET);
+}
 
 export interface User {
   id: string;
@@ -20,7 +23,7 @@ export async function createSession(user: User) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(secret);
+    .sign(getSecret());
   const cookieStore = await cookies();
   cookieStore.set("auth_token", token, {
     httpOnly: true,
@@ -36,6 +39,7 @@ export async function getSession(): Promise<User | null> {
 
   if (!token) return null;
 
+  const secret = getSecret();
   try {
     const verified = await jwtVerify(token, secret);
     return verified.payload as unknown as User;

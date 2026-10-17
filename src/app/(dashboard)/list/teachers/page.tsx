@@ -146,8 +146,8 @@ const TeacherListPage = async ({
         t.phone,
         t.address,
         t.img,
-        COALESCE(GROUP_CONCAT(DISTINCT s.name ORDER BY s.name SEPARATOR ','), '') AS subjectNames,
-        COALESCE(GROUP_CONCAT(DISTINCT c.name ORDER BY c.name SEPARATOR ','), '') AS classNames
+        COALESCE(STRING_AGG(DISTINCT s.name, ',' ORDER BY s.name), '') AS subjectNames,
+        COALESCE(STRING_AGG(DISTINCT c.name, ',' ORDER BY c.name), '') AS classNames
       FROM Teacher t
       LEFT JOIN _SubjectToTeacher st ON st.B = t.id
       LEFT JOIN Subject s ON s.id = st.A

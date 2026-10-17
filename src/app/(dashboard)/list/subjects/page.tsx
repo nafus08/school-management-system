@@ -71,7 +71,7 @@ const SubjectListPage = async ({
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
   const dataRows: any[] = await query(
-    `SELECT sub.id, sub.name, COALESCE(GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR ','), '') AS teacherNames
+    `SELECT sub.id, sub.name, COALESCE(STRING_AGG(DISTINCT t.name, ',' ORDER BY t.name), '') AS teacherNames
       FROM Subject sub
       LEFT JOIN _SubjectToTeacher st ON st.A = sub.id
       LEFT JOIN Teacher t ON t.id = st.B

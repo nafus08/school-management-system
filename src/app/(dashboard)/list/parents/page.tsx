@@ -106,7 +106,7 @@ const ParentListPage = async ({
         p.email,
         p.phone,
         p.address,
-        COALESCE(GROUP_CONCAT(DISTINCT s.name ORDER BY s.name SEPARATOR ','), '') AS studentNames
+        COALESCE(STRING_AGG(DISTINCT s.name, ',' ORDER BY s.name), '') AS studentNames
       FROM Parent p
       LEFT JOIN Student s ON s.parentId = p.id
       ${where}

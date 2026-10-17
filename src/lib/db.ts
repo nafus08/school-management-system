@@ -1,87 +1,87 @@
-import mysql from "mysql2/promise";
+import { Pool, QueryResultRow, types } from "pg";
 
 declare global {
-  // allow storing the pool on global to avoid creating multiple pools in dev HMR
   // eslint-disable-next-line no-var
-  var __mysqlPool: mysql.Pool | undefined;
+  var __postgresPool: Pool | undefined;
 }
 
-const createPool = () =>
-  mysql.createPool({
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: parseInt(process.env.DB_PORT || "3306"),
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "mydb",
-    waitForConnections: true,
-    // be conservative in dev to avoid exhausting DB connections
-    connectionLimit: parseInt(process.env.DB_CONN_LIMIT || "1"),
-    queueLimit: 0,
-  });
+types.setTypeParser(20, (value) => Number(value));
 
-const pool: mysql.Pool = global.__mysqlPool || createPool();
-if (!global.__mysqlPool) global.__mysqlPool = pool;
+const getPool = () => {
+  if (global.__postgresPool) return global.__postgresPool;
 
-export async function query(sql: string, values?: any[]) {
-  // retry on transient "Too many connections" errors, but serialize queries
-  const maxRetries = 5;
-  let attempt = 0;
-
-  // Simple global queue to serialize queries and avoid many simultaneous socket attempts.
-  if (!(global as any).__dbQueue) {
-    (global as any).__dbQueue = { queue: [] as Function[], running: false };
+  const connectionString =
+    process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!connectionString) {
+    throw new Error(
+      "Missing POSTGRES_URL or DATABASE_URL. Configure the Supabase PostgreSQL connection string.",
+    );
   }
 
-  const enqueue = (job: () => Promise<void>) => {
-    (global as any).__dbQueue.queue.push(job);
-    if (!(global as any).__dbQueue.running) processQueue();
-  };
-
-  const processQueue = async () => {
-    (global as any).__dbQueue.running = true;
-    while ((global as any).__dbQueue.queue.length) {
-      const job = (global as any).__dbQueue.queue.shift();
-      try {
-        await job();
-      } catch (e) {
-        // job handles rejection via promise; swallow here to continue queue
-      }
-    }
-    (global as any).__dbQueue.running = false;
-  };
-
-  return await new Promise<any[]>((resolve, reject) => {
-    const job = async () => {
-      while (true) {
-        try {
-          const [rows] = (await pool.execute(sql, values || [])) as any;
-          resolve(rows as any[]);
-          return;
-        } catch (err: any) {
-          const message = err?.message || "";
-          const code = err?.code || "";
-          if (
-            (code === "ER_CON_COUNT_ERROR" ||
-              /too many connections/i.test(message)) &&
-            attempt < maxRetries
-          ) {
-            attempt++;
-            const backoff = 50 * attempt;
-            await new Promise((r) => setTimeout(r, backoff));
-            continue;
-          }
-          reject(err);
-          return;
-        }
-      }
-    };
-
-    enqueue(job);
+  global.__postgresPool = new Pool({
+    connectionString,
+    ssl: { rejectUnauthorized: true },
+    max: Number.parseInt(process.env.DB_CONN_LIMIT || "5", 10),
   });
+
+  return global.__postgresPool;
+};
+
+const camelCaseResultKeys = [
+  "createdAt",
+  "bloodType",
+  "parentId",
+  "classId",
+  "gradeId",
+  "supervisorId",
+  "startTime",
+  "endTime",
+  "subjectId",
+  "teacherId",
+  "startDate",
+  "dueDate",
+  "examId",
+  "assignmentId",
+  "studentId",
+  "lessonId",
+  "subjectNames",
+  "classNames",
+  "studentNames",
+  "teacherNames",
+  "teacherSurname",
+  "examStartTime",
+  "assignmentStartDate",
+  "studentCount",
+  "subjectCount",
+  "classCount",
+  "lessonCount",
+];
+
+const resultKeyNames = new Map(
+  camelCaseResultKeys.map((key) => [key.toLowerCase(), key]),
+);
+
+function normalizeResultKeys(rows: QueryResultRow[]) {
+  return rows.map((row) =>
+    Object.fromEntries(
+      Object.entries(row).map(([key, value]) => [
+        resultKeyNames.get(key) || key,
+        value,
+      ]),
+    ),
+  );
 }
 
-export async function getConnection() {
-  return await pool.getConnection();
+export async function query(
+  sql: string,
+  values: unknown[] = [],
+): Promise<QueryResultRow[]> {
+  let parameterIndex = 0;
+  const parameterizedSql = sql.replace(/\?/g, () => {
+    parameterIndex += 1;
+    return `$${parameterIndex}`;
+  });
+  const postgresSql = parameterizedSql.replace(/\bLIKE\b/gi, "ILIKE");
+  const result = await getPool().query(postgresSql, values);
+  return normalizeResultKeys(result.rows);
 }
-
-export default pool;

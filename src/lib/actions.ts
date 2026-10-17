@@ -52,10 +52,14 @@ export const createSubject = async (
   data: SubjectSchema,
 ) => {
   try {
-    const result: any = await query("INSERT INTO Subject (name) VALUES (?)", [
-      data.name,
-    ]);
-    const subjectId = result.insertId;
+    const result = await query(
+      "INSERT INTO Subject (name) VALUES (?) RETURNING id",
+      [data.name],
+    );
+    const subjectId = result[0]?.id;
+    if (typeof subjectId !== "number") {
+      throw new Error("Subject insert did not return its generated id");
+    }
 
     await insertSubjectTeachers(subjectId, data.teachers);
 
