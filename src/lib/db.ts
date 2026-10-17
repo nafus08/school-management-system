@@ -1,4 +1,6 @@
 import { Pool, QueryResultRow, types } from "pg";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -18,9 +20,21 @@ const getPool = () => {
     );
   }
 
+  const connectionUrl = new URL(connectionString);
+  // pg-connection-string replaces the ssl config when SSL parameters are in the URL.
+  for (const parameter of ["sslmode", "sslcert", "sslkey", "sslrootcert"]) {
+    connectionUrl.searchParams.delete(parameter);
+  }
+
   global.__postgresPool = new Pool({
-    connectionString,
-    ssl: { rejectUnauthorized: true },
+    connectionString: connectionUrl.toString(),
+    ssl: {
+      ca: readFileSync(
+        join(process.cwd(), "supabase", "prod-ca-2021.crt"),
+        "utf8",
+      ),
+      rejectUnauthorized: true,
+    },
     max: Number.parseInt(process.env.DB_CONN_LIMIT || "5", 10),
   });
 

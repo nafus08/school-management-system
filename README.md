@@ -44,11 +44,11 @@ In the Supabase SQL Editor, run `supabase/schema.sql` first and then `supabase/s
 Create a `.env.local` file with the Supabase PostgreSQL connection string and a private session secret:
 
 ```dotenv
-DATABASE_URL=postgresql://postgres.[project-ref]:[password]@[host]:6543/postgres?sslmode=require
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@[host]:6543/postgres
 JWT_SECRET=replace-with-a-long-random-secret
 ```
 
-Use the transaction pooler connection string shown in **Supabase → Connect**. The app prefers `DATABASE_URL` and falls back to `POSTGRES_URL`, which may be provided by a Vercel integration. Add `DATABASE_URL` and `JWT_SECRET` to the Vercel environments you deploy (Production and Preview), then redeploy. Never commit database credentials or use a placeholder JWT secret in a public deployment.
+Use the transaction pooler connection string shown in **Supabase → Connect**. The app prefers `DATABASE_URL` and falls back to `POSTGRES_URL`, which may be provided by a Vercel integration. Database TLS is verified using the Supabase CA certificate at `supabase/prod-ca-2021.crt`. Add `DATABASE_URL` and `JWT_SECRET` to the Vercel environments you deploy (Production and Preview), then redeploy. Never commit database credentials or use a placeholder JWT secret in a public deployment.
 
 Start the development server:
 
