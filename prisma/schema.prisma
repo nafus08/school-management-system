@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id       String @id @db.VarChar(191)
+  username String @unique @db.VarChar(191)
+
+  @@map("admin")
+}
+
+model Grade {
+  id       Int       @id @default(autoincrement())
+  level    Int       @unique
+  classes  Class[]
+  students Student[]
+
+  @@map("grade")
+}
+
+model Subject {
+  id       Int              @id @default(autoincrement())
+  name     String           @unique @db.VarChar(191)
+  lessons  Lesson[]
+  teachers SubjectTeacher[]
+
+  @@map("subject")
+}
+
+model Parent {
+  id        String    @id @db.VarChar(191)
+  username  String    @unique @db.VarChar(191)
+  name      String    @db.VarChar(191)
+  surname   String    @db.VarChar(191)
+  email     String?   @unique @db.VarChar(191)
+  phone     String    @unique @db.VarChar(191)
+  address   String    @db.Text
+  createdAt DateTime? @default(now()) @map("createdat") @db.Timestamp(3)
+  students  Student[]
+
+  @@map("parent")
+}
+
+model Teacher {
+  id                String           @id @db.VarChar(191)
+  username          String           @unique @db.VarChar(191)
+  name              String           @db.VarChar(191)
+  surname           String           @db.VarChar(191)
+  email             String?          @unique @db.VarChar(191)
+  phone             String?          @unique @db.VarChar(191)
+  address           String           @db.Text
+  img               String?          @db.VarChar(191)
+  bloodType         String           @map("bloodtype") @db.VarChar(191)
+  gender            String           @db.VarChar(6)
+  createdAt         DateTime?        @default(now()) @map("createdat") @db.Timestamp(3)
+  birthday          DateTime         @db.Timestamp(3)
+  supervisedClasses Class[]          @relation("ClassSupervisor")
+  lessons           Lesson[]
+  subjects          SubjectTeacher[]
+
+  @@map("teacher")
+}
+
+model Class {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique @db.VarChar(191)
+  capacity      Int
+  supervisorId  String?        @map("supervisorid") @db.VarChar(191)
+  gradeId       Int            @map("gradeid")
+  supervisor    Teacher?       @relation("ClassSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_class_teacher")
+  grade         Grade          @relation(fields: [gradeId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_class_grade")
+  students      Student[]
+  lessons       Lesson[]
+  events        Event[]
+  announcements Announcement[]
+
+  @@map("class")
+}
+
+model Student {
+  id         String       @id @db.VarChar(191)
+  username   String       @unique @db.VarChar(191)
+  name       String       @db.VarChar(191)
+  surname    String       @db.VarChar(191)
+  email      String?      @unique @db.VarChar(191)
+  phone      String?      @unique @db.VarChar(191)
+  address    String       @db.Text
+  img        String?      @db.VarChar(191)
+  bloodType  String       @map("bloodtype") @db.VarChar(191)
+  gender     String       @db.VarChar(6)
+  createdAt  DateTime?    @default(now()) @map("createdat") @db.Timestamp(3)
+  parentId   String       @map("parentid") @db.VarChar(191)
+  classId    Int          @map("classid")
+  gradeId    Int          @map("gradeid")
+  birthday   DateTime     @db.Timestamp(3)
+  parent     Parent       @relation(fields: [parentId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_parent")
+  class      Class        @relation(fields: [classId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_class")
+  grade      Grade        @relation(fields: [gradeId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_grade")
+  attendance Attendance[]
+  results    Result[]
+
+  @@map("student")
+}
+
+model Lesson {
+  id          Int          @id @default(autoincrement())
+  name        String       @db.VarChar(191)
+  day         String       @db.VarChar(9)
+  startTime   DateTime     @map("starttime") @db.Timestamp(3)
+  endTime     DateTime     @map("endtime") @db.Timestamp(3)
+  subjectId   Int          @map("subjectid")
+  classId     Int          @map("classid")
+  teacherId   String       @map("teacherid") @db.VarChar(191)
+  subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_lesson_subject")
+  class       Class        @relation(fields: [classId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_lesson_class")
+  teacher     Teacher      @relation(fields: [teacherId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_lesson_teacher")
+  exams       Exam[]
+  assignments Assignment[]
+  attendance  Attendance[]
+
+  @@map("lesson")
+}
+
+model Exam {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(191)
+  startTime DateTime @map("starttime") @db.Timestamp(3)
+  endTime   DateTime @map("endtime") @db.Timestamp(3)
+  lessonId  Int      @map("lessonid")
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_exam_lesson")
+  results   Result[]
+
+  @@map("exam")
+}
+
+model Assignment {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(191)
+  startDate DateTime @map("startdate") @db.Timestamp(3)
+  dueDate   DateTime @map("duedate") @db.Timestamp(3)
+  lessonId  Int      @map("lessonid")
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_assignment_lesson")
+  results   Result[]
+
+  @@map("assignment")
+}
+
+model Result {
+  id           Int         @id @default(autoincrement())
+  score        Int
+  examId       Int?        @map("examid")
+  assignmentId Int?        @map("assignmentid")
+  studentId    String      @map("studentid") @db.VarChar(191)
+  exam         Exam?       @relation(fields: [examId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_result_exam")
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_result_assignment")
+  student      Student     @relation(fields: [studentId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_result_student")
+
+  @@map("result")
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @db.Timestamp(3)
+  present   Boolean
+  studentId String   @map("studentid") @db.VarChar(191)
+  lessonId  Int      @map("lessonid")
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_attendance_student")
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_attendance_lesson")
+
+  @@map("attendance")
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(191)
+  description String   @db.Text
+  startTime   DateTime @map("starttime") @db.Timestamp(3)
+  endTime     DateTime @map("endtime") @db.Timestamp(3)
+  classId     Int?     @map("classid")
+  class       Class?   @relation(fields: [classId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_event_class")
+
+  @@map("event")
+}
+
+model Announcement {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(191)
+  description String   @db.Text
+  date        DateTime @db.Timestamp(3)
+  classId     Int?     @map("classid")
+  class       Class?   @relation(fields: [classId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_announcement_class")
+
+  @@map("announcement")
+}
+
+model SubjectTeacher {
+  subjectId Int     @map("a")
+  teacherId String  @map("b") @db.VarChar(191)
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_subject_teacher_a")
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_subject_teacher_b")
+
+  @@unique([subjectId, teacherId])
+  @@map("_subjecttoteacher")
+}
