@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { createSession } from "@/lib/auth";
+import { createSession, User } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
 
-    if (!username || !password) {
+    if (
+      typeof username !== "string" ||
+      !username.trim() ||
+      typeof password !== "string" ||
+      !password
+    ) {
       return NextResponse.json(
         { error: "Username and password required" },
         { status: 400 },
@@ -15,27 +20,40 @@ export async function POST(request: NextRequest) {
     }
 
     // Check in all user tables (Student, Teacher, Parent, Admin)
-    let user: any = null;
-    let role: string = "";
+    let user: {
+      id: string;
+      username: string;
+      passwordHash: string | null;
+    } | null = null;
+    let role: User["role"] | null = null;
+    const normalizedUsername = username.trim();
 
     // Try Student
-    let result: any = await query(
-      "SELECT id, username FROM Student WHERE username = ?",
-      [username],
+    let result = await query(
+      "SELECT id, username, passwordhash FROM Student WHERE username = ?",
+      [normalizedUsername],
     );
     if (result.length > 0) {
-      user = result[0];
+      user = {
+        id: result[0].id,
+        username: result[0].username,
+        passwordHash: result[0].passwordHash,
+      };
       role = "student";
     }
 
     // Try Teacher
     if (!user) {
       result = await query(
-        "SELECT id, username FROM Teacher WHERE username = ?",
-        [username],
+        "SELECT id, username, passwordhash FROM Teacher WHERE username = ?",
+        [normalizedUsername],
       );
       if (result.length > 0) {
-        user = result[0];
+        user = {
+          id: result[0].id,
+          username: result[0].username,
+          passwordHash: result[0].passwordHash,
+        };
         role = "teacher";
       }
     }
@@ -43,11 +61,15 @@ export async function POST(request: NextRequest) {
     // Try Parent
     if (!user) {
       result = await query(
-        "SELECT id, username FROM Parent WHERE username = ?",
-        [username],
+        "SELECT id, username, passwordhash FROM Parent WHERE username = ?",
+        [normalizedUsername],
       );
       if (result.length > 0) {
-        user = result[0];
+        user = {
+          id: result[0].id,
+          username: result[0].username,
+          passwordHash: result[0].passwordHash,
+        };
         role = "parent";
       }
     }
@@ -55,16 +77,24 @@ export async function POST(request: NextRequest) {
     // Try Admin
     if (!user) {
       result = await query(
-        "SELECT id, username FROM Admin WHERE username = ?",
-        [username],
+        "SELECT id, username, passwordhash FROM Admin WHERE username = ?",
+        [normalizedUsername],
       );
       if (result.length > 0) {
-        user = result[0];
+        user = {
+          id: result[0].id,
+          username: result[0].username,
+          passwordHash: result[0].passwordHash,
+        };
         role = "admin";
       }
     }
 
-    if (!user) {
+    if (
+      !user?.passwordHash ||
+      !role ||
+      !(await bcrypt.compare(password, user.passwordHash))
+    ) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 },
@@ -74,7 +104,7 @@ export async function POST(request: NextRequest) {
     await createSession({
       id: user.id,
       username: user.username,
-      role: role as any,
+      role,
     });
 
     return NextResponse.json({ success: true, role }, { status: 200 });

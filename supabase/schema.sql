@@ -1,6 +1,7 @@
 CREATE TABLE admin (
     id VARCHAR(191) PRIMARY KEY,
-    username VARCHAR(191) UNIQUE NOT NULL
+    username VARCHAR(191) UNIQUE NOT NULL,
+    passwordhash VARCHAR(60)
 );
 
 CREATE TABLE grade (
@@ -16,6 +17,7 @@ CREATE TABLE subject (
 CREATE TABLE parent (
     id VARCHAR(191) PRIMARY KEY,
     username VARCHAR(191) UNIQUE NOT NULL,
+    passwordhash VARCHAR(60),
     name VARCHAR(191) NOT NULL,
     surname VARCHAR(191) NOT NULL,
     email VARCHAR(191) UNIQUE,
@@ -27,6 +29,7 @@ CREATE TABLE parent (
 CREATE TABLE teacher (
     id VARCHAR(191) PRIMARY KEY,
     username VARCHAR(191) UNIQUE NOT NULL,
+    passwordhash VARCHAR(60),
     name VARCHAR(191) NOT NULL,
     surname VARCHAR(191) NOT NULL,
     email VARCHAR(191) UNIQUE,
@@ -52,6 +55,7 @@ CREATE TABLE class (
 CREATE TABLE student (
     id VARCHAR(191) PRIMARY KEY,
     username VARCHAR(191) UNIQUE NOT NULL,
+    passwordhash VARCHAR(60),
     name VARCHAR(191) NOT NULL,
     surname VARCHAR(191) NOT NULL,
     email VARCHAR(191) UNIQUE,

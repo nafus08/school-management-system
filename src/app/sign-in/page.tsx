@@ -7,6 +7,7 @@ import { FormEvent } from "react";
 export default function SignIn() {
   const router = useRouter();
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +20,7 @@ export default function SignIn() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password: "password" }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (!response.ok) {
@@ -59,6 +60,22 @@ export default function SignIn() {
               placeholder="Enter your username"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
               required
+              autoComplete="username"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+              required
             />
           </div>
 
@@ -78,7 +95,7 @@ export default function SignIn() {
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          Demo users: admin1, teacher1, student1, parentId1
+          Demo usernames: admin1, teacher1, student1, parentId1. Ask the administrator to set up your password.
         </p>
       </div>
     </div>

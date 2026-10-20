@@ -4,6 +4,7 @@ type QueryRow = Record<string, any>;
 
 const camelCaseResultKeys = [
   "createdAt",
+  "passwordHash",
   "bloodType",
   "parentId",
   "classId",

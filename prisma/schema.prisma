@@ -8,8 +8,9 @@ datasource db {
 }
 
 model Admin {
-  id       String @id @db.VarChar(191)
-  username String @unique @db.VarChar(191)
+  id           String  @id @db.VarChar(191)
+  username     String  @unique @db.VarChar(191)
+  passwordHash String? @map("passwordhash") @db.VarChar(60)
 
   @@map("admin")
 }
@@ -33,15 +34,16 @@ model Subject {
 }
 
 model Parent {
-  id        String    @id @db.VarChar(191)
-  username  String    @unique @db.VarChar(191)
-  name      String    @db.VarChar(191)
-  surname   String    @db.VarChar(191)
-  email     String?   @unique @db.VarChar(191)
-  phone     String    @unique @db.VarChar(191)
-  address   String    @db.Text
-  createdAt DateTime? @default(now()) @map("createdat") @db.Timestamp(3)
-  students  Student[]
+  id           String    @id @db.VarChar(191)
+  username     String    @unique @db.VarChar(191)
+  passwordHash String?   @map("passwordhash") @db.VarChar(60)
+  name         String    @db.VarChar(191)
+  surname      String    @db.VarChar(191)
+  email        String?   @unique @db.VarChar(191)
+  phone        String    @unique @db.VarChar(191)
+  address      String    @db.Text
+  createdAt    DateTime? @default(now()) @map("createdat") @db.Timestamp(3)
+  students     Student[]
 
   @@map("parent")
 }
@@ -49,6 +51,7 @@ model Parent {
 model Teacher {
   id                String           @id @db.VarChar(191)
   username          String           @unique @db.VarChar(191)
+  passwordHash      String?          @map("passwordhash") @db.VarChar(60)
   name              String           @db.VarChar(191)
   surname           String           @db.VarChar(191)
   email             String?          @unique @db.VarChar(191)
@@ -83,26 +86,27 @@ model Class {
 }
 
 model Student {
-  id         String       @id @db.VarChar(191)
-  username   String       @unique @db.VarChar(191)
-  name       String       @db.VarChar(191)
-  surname    String       @db.VarChar(191)
-  email      String?      @unique @db.VarChar(191)
-  phone      String?      @unique @db.VarChar(191)
-  address    String       @db.Text
-  img        String?      @db.VarChar(191)
-  bloodType  String       @map("bloodtype") @db.VarChar(191)
-  gender     String       @db.VarChar(6)
-  createdAt  DateTime?    @default(now()) @map("createdat") @db.Timestamp(3)
-  parentId   String       @map("parentid") @db.VarChar(191)
-  classId    Int          @map("classid")
-  gradeId    Int          @map("gradeid")
-  birthday   DateTime     @db.Timestamp(3)
-  parent     Parent       @relation(fields: [parentId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_parent")
-  class      Class        @relation(fields: [classId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_class")
-  grade      Grade        @relation(fields: [gradeId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_grade")
-  attendance Attendance[]
-  results    Result[]
+  id           String       @id @db.VarChar(191)
+  username     String       @unique @db.VarChar(191)
+  passwordHash String?      @map("passwordhash") @db.VarChar(60)
+  name         String       @db.VarChar(191)
+  surname      String       @db.VarChar(191)
+  email        String?      @unique @db.VarChar(191)
+  phone        String?      @unique @db.VarChar(191)
+  address      String       @db.Text
+  img          String?      @db.VarChar(191)
+  bloodType    String       @map("bloodtype") @db.VarChar(191)
+  gender       String       @db.VarChar(6)
+  createdAt    DateTime?    @default(now()) @map("createdat") @db.Timestamp(3)
+  parentId     String       @map("parentid") @db.VarChar(191)
+  classId      Int          @map("classid")
+  gradeId      Int          @map("gradeid")
+  birthday     DateTime     @db.Timestamp(3)
+  parent       Parent       @relation(fields: [parentId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_parent")
+  class        Class        @relation(fields: [classId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_class")
+  grade        Grade        @relation(fields: [gradeId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_student_grade")
+  attendance   Attendance[]
+  results      Result[]
 
   @@map("student")
 }
